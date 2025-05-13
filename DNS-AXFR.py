@@ -1,41 +1,36 @@
 #!/usr/bin/env python3
-# DNS AXFR - authoritative zone transfer
-#/home/pres/github/htb/Ipython/venv/bin/activate
-
-
 # Dependencies
 # python3-dnspython
 
-# Used Modules
 import dns.zone as dz
 import dns.query as dq
 import dns.resolver as dr
 import argparse
 
-# Initialize Resolver-Class from dns.resolver as "NS"
+# Inicializace třídy Resolver z dns.resovler jako "NS"
 NS = dr.Resolver()
 
-# list of found subdomains
+# Seznam nalezených subdomén
 Subdomains = []
 
-# Define the AXFR Function 
+# Definice funkce AXFR pro přenos zóny
 def AXFR(domain, nameserver):
-        # try zone transfer for given domain and nameserver
+        # Pokus o přenos zóny pro danou doménu a nameserver 
         try:
-                # perform the zone transfer
-                # Initiates a zone transfer request to the specified nameserver for the given domain.
+                # Zahájení požadavku pro přenos zóny k určenému namserveru pro danou doménu
+                # Funkce dq.xfr iniciuje přenos a dz.from_xfr zpracovává vásledky 
                 axfr = dz.from_xfr(dq.xfr(nameserver, domain))
 
-                # if zone transfer was successful
+                # Pokud je přenos zóny úspěšný
                 if axfr:
-                        print('[*] Successful Zone transfer from {}'.format(nameserver))
+                        print('[*] Úspššný přenos zóny {}'.format(nameserver))
                         
-                        # add found subdomains to global 'subdomains' list
+                        # Přidání nalezených subdomén do seznamu 'Subdomains'
                         for record in axfr:
                                 Subdomains.append('{}.{}'.format(record.to_text(), domain))
 
 
-        # if zone transfer fails
+        # Pokud přenos zóny selže 
         except Exception as error:
                 print(error)
                 pass
@@ -43,22 +38,22 @@ def AXFR(domain, nameserver):
 # Main
 if __name__ == '__main__':
 
-        # Argument Parser - define usage
+        # Argument Parser
         parser = argparse.ArgumentParser(prog='DNS-AXFR.py', epilog='DNS Zone transfer Script', usage="DNS-AXFR.py [options] -d <DOMAIN>", prefix_chars='-', add_help=True)
 
-        # Positional arguments
-        parser.add_argument('-d', action='store', metavar='Domain', type=str, help='Target Domain.\tExample: inlanefreight.htb', required=True)
-        parser.add_argument('-n', action='store', metavar='Nameserver', type=str, help='Nameserver seperated by comma.\tExample: ns1.inlanefreight.com,ns2.inlanefreight.com', required=True) 
+        # Argumenty 
+        parser.add_argument('-d', action='store', metavar='Domain', type=str, help='Domain.\tExample: example.htb', required=True)
+        parser.add_argument('-n', action='store', metavar='Nameserver', type=str, help='Nameserver .\tExample: ns1.example.com,ns2.example.com', required=True) 
         parser.add_argument('-v', action='version', version='DNS-AXFR.py - v1.0', help='Prints the version of DNS-AXFR.py')
 
-        # Assign given arguments
+        # Argumenty pro pomoc
         args = parser.parse_args()
 
-        # Variables
+        # Nastavení proměnných 
         Domain = args.d
         NS.nameservers = list(args.n.split(","))
 
-        # Check if url is given
+        # Kontrola argumentů
         if not args.d:
                 print("[!] You must specify target Domain.\n")
                 print(parser.print_help())
@@ -68,15 +63,15 @@ if __name__ == '__main__':
                 print(parser.print_help())
                 exit()
                 
-        # for each nameserver
+        # pro každý nameserver
         for nameserver in NS.nameservers:
-                # Try AXFR
+                # Zkus AXFR přenos
                 AXFR(Domain, nameserver)
-        # print the results 
+        # Výpis výsledků 
         if Subdomains is not None:
                 print('========= Found Subdomains  =========')
 
-                # print each subdomain
+                # Výpis každé subdomény 
                 for subdomain in Subdomains:
                         print('{}'.format(subdomain))
         else:
